@@ -22,10 +22,21 @@
   with_items: "{{ oracle_product.install_zips }}"
   when: download_flag
 
+- name: check extract directory
+  stat:
+    path: "{{ mw_installer_folder }}/extract"
+  register: extract_folder
+
+- name: "echo if directory already existed"
+  debug:
+    msg: "the extract directory is already existed"
+  when: extract_folder.stat.exists
+
 - name: clear extract folder
   file:
     path:  "{{ mw_installer_folder }}/extract"
     state: absent
+  when: extract_folder.stat.exists == false
 
 - name: create extract folder
   file:
@@ -33,6 +44,7 @@
     state: directory
     owner: "{{ oracle_user }}"
     group: "{{ oracle_group }}"
+  when: extract_folder.stat.exists == false
 
 - name: unzip installer for {{ oracle_product_code }}
   command: unzip {{ mw_software_folder }}/{{ item }} -d {{ mw_installer_folder }}/extract warn=no
